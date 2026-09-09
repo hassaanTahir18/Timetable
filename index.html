@@ -175,12 +175,11 @@
         font-family: system-ui, -apple-system, sans-serif;
     }
 
-    /* Assigning flex: 1 to the side columns forces the center column into the exact middle */
     .nav-left {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 2px;
     }
 
     .nav-left h1 {
@@ -192,7 +191,7 @@
     }
 
     .nav-left p {
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         color: #64748b;
         margin: 0;
         font-style: italic;
@@ -204,7 +203,6 @@
         justify-content: center;
     }
 
-    /* Segmented control container for sharp, modern tabs */
     .tab-group {
         display: flex;
         background: #f1f5f9;
@@ -232,6 +230,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        white-space: nowrap;
     }
 
     .nav-btn:hover:not(.active):not(.print-btn) {
@@ -245,7 +244,6 @@
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
-    /* High-contrast primary action button */
     .print-btn {
         background: #0f172a;
         color: #ffffff;
@@ -260,21 +258,66 @@
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .page-break-divider { border-top: 2px dashed #cbd5e1; margin: 40px 0; }
-    
+
+    /* Enforce strict pagination per class sheet so they never split across pages */
+    .sheetwrap {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        page-break-after: always;
+        break-after: page;
+        margin-bottom: 30px;
+    }
+
+    .page-break-divider { 
+        border-top: 2px dashed #cbd5e1; 
+        margin: 40px 0; 
+    }
+
+    /* Mobile Responsive Breakdown */
+    @media (max-width: 768px) {
+        .custom-nav {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 14px;
+            padding: 14px;
+        }
+        .nav-left {
+            text-align: center;
+        }
+        .nav-center {
+            justify-content: center;
+            width: 100%;
+        }
+        .tab-group {
+            width: 100%;
+            justify-content: center;
+        }
+        .tab-group .nav-btn {
+            flex: 1;
+            justify-content: center;
+        }
+        .nav-right {
+            justify-content: center;
+            width: 100%;
+        }
+        .print-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
     @media print { 
         .custom-nav, .page-break-divider { display: none !important; }
+        body { background: #fff; }
     }
 </style>
-    <body>
-       <div class="custom-nav noprint">
-    <!-- Left: Branding and frustration -->
+
+<div class="custom-nav noprint">
     <div class="nav-left">
         <h1>ComSucks Timetable Combined</h1>
         <p>For god sake give us a simple pdf file from next time! Don't fix which isn't broken.</p>
     </div>
 
-    <!-- Center: Tab Controls -->
     <div class="nav-center">
         <div class="tab-group">
             <button class="nav-btn active" onclick="switchTab(event, 'classes')">Classes (Students)</button>
@@ -282,10 +325,8 @@
         </div>
     </div>
 
-    <!-- Right: Print Action -->
     <div class="nav-right">
         <button class="nav-btn print-btn" onclick="window.print()">
-            <!-- Inline SVG Printer Icon -->
             <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                 <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
