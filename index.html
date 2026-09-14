@@ -271,8 +271,15 @@
         .page-break-divider { border-top: 2px dashed #cbd5e1; margin: 40px 0; }
         
         @media (max-width: 768px) {
-            .custom-nav { flex-direction: column; align-items: stretch; gap: 14px; padding: 14px; }
-            .nav-left, .nav-center, .nav-right { width: 100%; text-align: center; justify-content: center; }
+            .custom-nav { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 15px; 
+                padding: 16px; 
+                position: static !important; /* This forces it to scroll away on mobile */
+            }
+            .nav-left, .nav-center, .nav-right { flex: none; width: 100%; }
+            .nav-center, .nav-right { justify-content: flex-start; }
             .tab-group, .print-btn { width: 100%; justify-content: center; }
             .tab-group .nav-btn { flex: 1; justify-content: center; }
         }
@@ -280,29 +287,72 @@
             .custom-nav, .page-break-divider { display: none !important; }
             body { background: #fff; }
         }
+        /* UNIFIED HEADER CSS */
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; margin: 0; color: #0f172a; }
+        .custom-nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+        .nav-left { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+        .nav-left h1 { font-size: 1.15rem; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+        .nav-left p { font-size: 0.78rem; color: #64748b; margin: 0; font-style: italic; }
+        
+        .nav-center { flex: 1; display: flex; justify-content: center; }
+        .tab-group { display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; gap: 4px; }
+        .tab-group a { text-decoration: none; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; color: inherit; }
+        .tab-group a.active { background: #ffffff; color: #0f172a; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+        
+        .nav-right { flex: 1; display: flex; justify-content: flex-end; }
+        .print-btn { padding: 8px 16px; background: #0f172a; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .print-btn:hover { background: #1e293b; }
+
+        /* LOCAL FILTER TABS (Classes vs Faculty) */
+        .local-filters { display: flex; justify-content: center; padding: 12px; background: #fff; border-bottom: 1px solid #e2e8f0; gap: 10px; }
+        .filter-btn { padding: 6px 16px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #475569; transition: 0.2s; }
+        .filter-btn:hover { background: #e2e8f0; }
+        .filter-btn.active { background: #0f172a; color: white; border-color: #0f172a; }
+
+        /* MOBILE RESPONSIVENESS */
+        @media (max-width: 768px) {
+           .custom-nav { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 15px; 
+                padding: 16px; 
+                position: static !important; /* This forces it to scroll away on mobile */
+            }
+            .nav-left, .nav-center, .nav-right { flex: none; width: 100%; }
+            .nav-center, .nav-right { justify-content: flex-start; }
+        }
+
+        @media print {
+            .noprint { display: none !important; }
+            body { background: #fff; }
+        }
     </style>
     <body>
-        <div class="custom-nav noprint">
-            <div class="nav-left">
-                <h1>ComSucks Timetable Combined</h1>
-                <p>For god sake give us a simple pdf file from next time! Don't fix which isn't broken.</p>
-            </div>
-            <div class="nav-center">
-                <div class="tab-group">
-                    <button class="nav-btn active" onclick="switchTab(event, 'classes')">Classes (Students)</button>
-                    <button class="nav-btn" onclick="switchTab(event, 'faculty')">Faculty</button>
-                </div>
-            </div>
-            <div class="nav-right">
-                <button class="nav-btn print-btn" onclick="window.print()">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-                    </svg>
-                    Print Active Tab
-                </button>
+        <!-- GLOBAL APP NAV -->
+    <div class="custom-nav noprint">
+        <div class="nav-left">
+            <h1>ComSucks Timetable Combined</h1>
+            <p>For god sake give us a simple pdf file from next time! Don't fix which isn't broken.</p>
+        </div>
+        <div class="nav-center">
+            <div class="tab-group">
+                <a href="index.html" class="active">Master Schedule</a>
+                <a href="builder.html">Custom Timetable</a>
             </div>
         </div>
+        <div class="nav-right">
+            <button class="print-btn" onclick="window.print()">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: -2px; margin-right: 4px;"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+                Download PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- LOCAL DATA FILTER -->
+    <div class="local-filters noprint">
+        <button class="filter-btn active" onclick="switchTab(event, 'classes')">Students View</button>
+        <button class="filter-btn" onclick="switchTab(event, 'faculty')">Faculty View</button>
+    </div>
         
         <div class="wrap">
             <div id="classes" class="tab-content active">
@@ -313307,13 +313357,23 @@
         </div>
 
         <script>
-            function switchTab(e, tabId) {
-                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-                document.querySelectorAll('.custom-nav .nav-btn').forEach(el => el.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
-                e.currentTarget.classList.add('active');
+        function switchTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
             }
-        </script>
+            
+            // Look for the new filter-btn class
+            tablinks = document.getElementsByClassName("filter-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+    </script>
     </body>
     </html>
     

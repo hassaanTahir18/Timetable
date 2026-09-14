@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetable Builder - ComSucks</title>
+    <style>
+        :root { --bg: #f1f5f9; --border: #cbd5e1; --text: #0f172a; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
+        .container { max-width: 1400px; margin: 0 auto; display: flex; gap: 20px; align-items: flex-start; }
+        
+        .sidebar { flex: 0 0 320px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .sidebar h2 { font-size: 1.2rem; margin-top: 0; margin-bottom: 15px; }
+        .input-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+        .input-group label { font-size: 0.8rem; font-weight: 600; color: #475569; }
+        .input-box { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 0.9rem; }
+        .btn { padding: 10px; background: #0f172a; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; text-align: center; }
+        .btn:hover { background: #1e293b; }
+        .btn-outline { background: transparent; color: #0f172a; border: 1px solid #0f172a; }
+        .btn-outline:hover { background: #f1f5f9; }
+        
+        /* Search Dropdown */
+        #searchResults { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow-y: auto; background: #fff; border-radius: 6px; }
+        .search-item { padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; cursor: pointer; font-size: 0.8rem; background: #f8fafc; transition: 0.1s; }
+        .search-item:hover { background: #e2e8f0; border-color: #cbd5e1; }
+
+        .selected-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .course-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: flex-start; }
+        .course-item button { background: none; border: none; color: #dc2626; cursor: pointer; font-weight: bold; padding: 0 5px; }
+
+        /* TIMETABLE GRID */
+        .timetable-wrapper { flex: 1; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; }
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header-actions h1 { margin: 0; font-size: 1.4rem; }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: 50px repeat(24, minmax(45px, 1fr));
+            border: 1px solid var(--border);
+            border-bottom: none;
+            background: #fff;
+            min-width: 1100px; 
+        }
+        
+        .grid-header, .grid-day { background: #f8fafc; font-weight: bold; text-align: center; padding: 12px 2px; font-size: 0.75rem; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+        .grid-day { display: flex; align-items: center; justify-content: center; background: #fff; font-size: 0.9rem; }
+        
+        .day-row {
+            display: grid;
+            grid-template-columns: subgrid;
+            grid-column: 1 / -1;
+            align-items: stretch; /* Forces internal items to stretch full height */
+        }
+
+        /* Fixed Vertical Background Lines */
+        .empty-cell { border-right: 1px solid #e2e8f0; border-bottom: 1px solid var(--border); grid-row: 1 / -1; }
+
+        .class-block {
+            padding: 6px;
+            font-size: 0.7rem;
+            line-height: 1.3;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 10;
+            margin: 2px;
+            border-radius: 4px;
+            color: #0f172a;
+        }
+        .class-block strong { display: block; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .class-block .title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.85; }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .sidebar, .timetable-wrapper { width: 100%; box-sizing: border-box; }
+        }
+      @media print {
+            body { 
+                padding: 0; 
+                background: #fff; 
+                /* Force the browser to print background colors */
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+            }
+            .container { display: block; }
+            .sidebar, .header-actions button { display: none !important; }
+            .timetable-wrapper { box-shadow: none; padding: 0; width: 100%; overflow: visible; }
+            .grid-container { min-width: 100%; border: 1px solid #cbd5e1; }
+            @page { size: A4 landscape; margin: 10mm; }
+        }
+        /* UNIFIED HEADER CSS */
+        .custom-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            /* Removed 'position: sticky; top: 0;' so it scrolls away */
+        }
+        .nav-left { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+        .nav-left h1 { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0; letter-spacing: -0.02em; }
+        .nav-left p { font-size: 0.78rem; color: #64748b; margin: 0; font-style: italic; }
+        
+        .nav-center { flex: 1; display: flex; justify-content: center; }
+        .tab-group { display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; gap: 4px; }
+        .tab-group a { text-decoration: none; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; color: inherit; }
+        .tab-group a.active { background: #ffffff; color: #047857; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+        .nav-right { flex: 1; }
+
+        /* Mobile Breakpoint for the Header */
+        @media (max-width: 768px) {
+            .custom-nav { flex-direction: column; align-items: flex-start; gap: 15px; padding: 16px; }
+            .nav-left, .nav-center, .nav-right { flex: none; width: 100%; }
+            .nav-center { justify-content: flex-start; }
+            .container { padding-top: 0; }
+        }
+    </style>
+</head>
+<body>
+   <div class="custom-nav noprint">
+        <div class="nav-left">
+            <h1>ComSucks Timetable Combined</h1>
+            <p>For god sake give us a simple pdf file from next time! Don't fix which isn't broken.</p>
+        </div>
+        
+        <div class="nav-center">
+            <div class="tab-group">
+                <a href="index.html">Master Schedule</a>
+                <a href="builder.html" class="active">Custom Timetable</a>
+            </div>
+        </div>
+
+        <div class="nav-right"></div>
+    </div>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <div class="sidebar noprint">
+            <h2>Custom Timetable</h2>
+            
+            <div class="input-group">
+                <label>1. Start with a Base Batch</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="baseBatchInput" class="input-box" placeholder="e.g., FA23-BCS-A">
+                    <button class="btn" onclick="loadBaseBatch()">Load</button>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+
+            <div class="input-group">
+                <label>2. Add Course / Elective</label>
+                <input type="text" id="courseSearch" class="input-box" placeholder="Search (Course, Title, Teacher)...">
+                <div id="searchResults"></div>
+            </div>
+            
+            <div class="input-group">
+                <label>My Roster</label>
+                <div id="myCoursesList" class="selected-list">
+                    <div style="color: #64748b; font-size: 0.8rem; font-style: italic;">No courses loaded yet.</div>
+                </div>
+            </div>
+            
+            <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" onclick="clearRoster()">Clear All</button>
+        </div>
+
+        <!-- TIMETABLE -->
+        <div class="timetable-wrapper">
+            <div class="header-actions">
+                <h1>My Schedule</h1>
+                <button class="btn" onclick="window.print()">Download PDF</button>
+            </div>
+            
+            <div class="grid-container" id="timetableGrid">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+   <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+        // TODO: Replace with your actual Supabase URL and Anon Key
+         const supabase = createClient('https://jtsqxhoktidpjluhlaxa.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0c3F4aG9rdGlkcGpsdWhsYXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzOTM4MDUsImV4cCI6MjEwNDk2OTgwNX0.HSTJ3hh6UES5pvP38QwnrcyG3JV8c2v1kK8TQ8lOd-0')
+
+        let myRoster = [];
+        const days = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+        const palettes = [
+            { bg: '#dbeafe', border: '#1d4ed8' }, { bg: '#d1fae5', border: '#047857' },
+            { bg: '#fef3c7', border: '#b45309' }, { bg: '#fce7f3', border: '#be185d' },
+            { bg: '#e0e7ff', border: '#4338ca' }, { bg: '#ffedd5', border: '#ea580c' },
+            { bg: '#ccfbf1', border: '#0f766e' }, { bg: '#fae8ff', border: '#a21caf' },
+            { bg: '#ecfccb', border: '#4d7c0f' }, { bg: '#ffe4e6', border: '#e11d48' }
+        ];
+        
+        let courseColors = {};
+        let colorIndex = 0;
+
+        function getPalette(courseCode) {
+            if (!courseColors[courseCode]) {
+                courseColors[courseCode] = palettes[colorIndex % palettes.length];
+                colorIndex++;
+            }
+            return courseColors[courseCode];
+        }
+
+        // --- GRID RENDERING ---
+        function renderGrid() {
+            const grid = document.getElementById('timetableGrid');
+            let html = '<div class="grid-header">Day</div>';
+            
+            let hr = 8, min = 30;
+            for(let i=0; i<24; i++) {
+                let nextMin = min === 30 ? 0 : 30;
+                let nextHr = min === 30 ? hr + 1 : hr;
+                html += `<div class="grid-header">${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}</div>`;
+                hr = nextHr; min = nextMin;
+            }
+
+            days.forEach(day => {
+                const daySlots = myRoster.filter(s => s.day === day);
+                daySlots.sort((a, b) => a.period_start - b.period_start);
+                
+                const lanes = [];
+                daySlots.forEach(slot => {
+                    let placed = false;
+                    for(let i = 0; i < lanes.length; i++) {
+                        if(lanes[i] < slot.period_start) {
+                            slot.lane = i;
+                            lanes[i] = slot.period_start + slot.period_span - 1;
+                            placed = true;
+                            break;
+                        }
+                    }
+                    if(!placed) {
+                        slot.lane = lanes.length;
+                        lanes.push(slot.period_start + slot.period_span - 1);
+                    }
+                });
+
+                const totalLanes = Math.max(1, lanes.length);
+                html += `<div class="day-row" id="row-${day}" style="grid-template-rows: repeat(${totalLanes}, minmax(65px, auto));">`;
+                html += `<div class="grid-day" style="grid-row: 1 / -1">${day}</div>`;
+                
+                for(let i=2; i<=25; i++) {
+                    html += `<div class="empty-cell" style="grid-column: ${i};"></div>`;
+                }
+
+                daySlots.forEach(slot => {
+                    const courseTitle = slot.courses?.title || 'Title Unavailable';
+                    const colors = getPalette(slot.course_code);
+                    const displayName = slot.course_group ? `${slot.course_code} - ${slot.course_group}` : slot.course_code;
+                    
+                    html += `
+                        <div class="class-block" style="
+                            grid-column: ${slot.period_start + 1} / span ${slot.period_span}; 
+                            grid-row: ${slot.lane + 1};
+                            background-color: ${colors.bg};
+                            border-left: 4px solid ${colors.border};">
+                            <div>
+                                <strong>${displayName}</strong>
+                                <div class="title">${courseTitle}</div>
+                            </div>
+                            <div>
+                                <span>${slot.teacher || ''}</span><br>
+                                <span style="opacity: 0.7;">${slot.room || ''}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            });
+            grid.innerHTML = html;
+        }
+
+        function renderRosterList() {
+            const list = document.getElementById('myCoursesList');
+            if (myRoster.length === 0) {
+                list.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; font-style: italic;">No courses loaded yet.</div>';
+                return;
+            }
+
+            // Uniquely identify courses using Code + Group + Section
+            const uniqueCourses = [...new Map(myRoster.map(item => [item.course_code + (item.course_group || '') + item.section_name, item])).values()];
+            list.innerHTML = uniqueCourses.map(course => {
+                const colors = getPalette(course.course_code);
+                const displayName = course.course_group ? `${course.course_code} - ${course.course_group}` : course.course_code;
+                return `
+                <div class="course-item" style="border-left: 4px solid ${colors.border};">
+                    <div>
+                        <strong>${displayName}</strong> - ${course.section_name}<br>
+                        <span style="color: #64748b;">${course.courses?.title || 'Title Unavailable'}</span>
+                    </div>
+                    <button onclick="removeCourse('${course.course_code}', '${course.section_name}', '${course.course_group || ''}')" title="Remove">&times;</button>
+                </div>
+            `}).join('');
+        }
+
+        // --- ACTIONS ---
+        window.loadBaseBatch = async () => {
+            const batch = document.getElementById('baseBatchInput').value.trim().toUpperCase();
+            if(!batch) return alert("Enter a batch name.");
+            
+            const { data, error } = await supabase.from('timetable_slots').select('*, courses(title)').eq('section_name', batch);
+            if (error || !data.length) return alert("Batch not found.");
+            
+            const newSlots = data.filter(d => !myRoster.find(r => r.id === d.id));
+            myRoster.push(...newSlots);
+            renderRosterList();
+            renderGrid();
+            document.getElementById('baseBatchInput').value = '';
+        }
+        
+        window.removeCourse = (courseCode, sectionName, courseGroup) => {
+            const grpCheck = courseGroup === '' ? null : courseGroup;
+            myRoster = myRoster.filter(slot => !(slot.course_code === courseCode && slot.section_name === sectionName && slot.course_group === grpCheck));
+            renderRosterList();
+            renderGrid();
+        }
+
+        window.clearRoster = () => {
+            myRoster = [];
+            renderRosterList();
+            renderGrid();
+        }
+
+        // --- SEARCH ---
+       // --- ADVANCED SEARCH (High Limit Fetch) ---
+        let debounceTimer;
+        document.getElementById('courseSearch').addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            const query = e.target.value.trim();
+            const resDiv = document.getElementById('searchResults');
+            
+            if(query.length < 2) { resDiv.innerHTML = ''; return; }
+            
+            debounceTimer = setTimeout(async () => {
+                // 1. Search the courses table for matching titles
+                const { data: courseMatches } = await supabase.from('courses').select('code').ilike('title', `%${query}%`);
+                const matchedCodes = (courseMatches || []).map(c => c.code);
+                const titleFilter = matchedCodes.length > 0 ? `course_code.in.(${matchedCodes.join(',')}),` : '';
+
+                // 2. Fetch a massive pool of slots (Increased from 50 to 400)
+                const { data } = await supabase
+                    .from('timetable_slots')
+                    .select('*, courses(title)')
+                    .or(`${titleFilter}course_code.ilike.%${query}%,course_group.ilike.%${query}%,section_name.ilike.%${query}%,teacher.ilike.%${query}%`)
+                    .limit(400); 
+                
+                // 3. Deduplicate by Code + Group + Section
+                const unique = [...new Map((data || []).map(item => [item.course_code + (item.course_group || '') + item.section_name, item])).values()];
+                
+                if (unique.length === 0) {
+                    resDiv.innerHTML = '<div class="search-item" style="cursor:default;">No matches found.</div>';
+                    return;
+                }
+
+                // 4. Cap the visual UI to 50 unique results to prevent DOM lag, but now it has the right data
+                const displayResults = unique.slice(0, 50);
+
+                resDiv.innerHTML = displayResults.map(slot => {
+                    const displayName = slot.course_group ? `${slot.course_code} - ${slot.course_group}` : slot.course_code;
+                    return `
+                    <div class="search-item" onclick="addSearchedCourse('${slot.course_code}', '${slot.section_name}', '${slot.course_group || ''}')">
+                        <strong>${displayName}</strong> (${slot.section_name})<br>
+                        <span style="color: #64748b;">${slot.courses?.title || 'Title Unavailable'} | ${slot.teacher || 'Unknown'}</span>
+                    </div>
+                `}).join('');
+            }, 300);
+        });
+
+        window.addSearchedCourse = async (code, sec, grp) => {
+            const grpCheck = grp === '' ? null : grp;
+            let query = supabase.from('timetable_slots').select('*, courses(title)').eq('course_code', code).eq('section_name', sec);
+            
+            if (grpCheck) { query = query.eq('course_group', grpCheck); } 
+            else { query = query.is('course_group', null); }
+
+            const { data } = await query;
+            const newSlots = data.filter(d => !myRoster.find(r => r.id === d.id));
+            myRoster.push(...newSlots);
+            renderRosterList();
+            renderGrid();
+            
+            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('courseSearch').value = '';
+        }
+
+        renderGrid();
+    </script>
+</body>
+</html>
