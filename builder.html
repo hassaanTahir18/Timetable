@@ -210,15 +210,29 @@
         // --- GRID RENDERING ---
         function renderGrid() {
             const grid = document.getElementById('timetableGrid');
-            let html = '<div class="grid-header">Day</div>';
+            
+            // Vertically center the "Day" label to match the new taller headers
+            let html = '<div class="grid-header" style="display: flex; align-items: center; justify-content: center;">Day</div>';
             
             let hr = 8, min = 30;
-            for(let i=0; i<24; i++) {
+            for(let i = 0; i < 24; i++) {
                 let nextMin = min === 30 ? 0 : 30;
                 let nextHr = min === 30 ? hr + 1 : hr;
-                html += `<div class="grid-header">${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}</div>`;
+                
+                let startStr = `${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+                let endStr = `${String(nextHr).padStart(2,'0')}:${String(nextMin).padStart(2,'0')}`;
+                
+                // Stack Period #, Start Time, and End Time perfectly
+                html += `
+                    <div class="grid-header" style="display: flex; flex-direction: column; padding: 4px 1px; gap: 2px;">
+                        <div style="font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 2px;">${i + 1}</div>
+                        <div style="font-size: 0.65rem; line-height: 1;">${startStr}</div>
+                        <div style="font-size: 0.65rem; line-height: 1;">${endStr}</div>
+                    </div>
+                `;
                 hr = nextHr; min = nextMin;
             }
+           
 
             days.forEach(day => {
                 const daySlots = myRoster.filter(s => s.day === day);
