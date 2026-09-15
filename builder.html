@@ -141,9 +141,11 @@
             <h2>Custom Timetable</h2>
             
             <div class="input-group">
-                <label>1. Start with a Base Batch</label>
+                <label>1. Start with a Base Batch and load it</label>
                 <div style="display: flex; gap: 8px;">
-                    <input type="text" id="baseBatchInput" class="input-box" placeholder="e.g., FA23-BCS-A">
+                    <!-- Added list="batchList" to connect the native autocomplete -->
+                    <input type="text" id="baseBatchInput" class="input-box" list="batchList" placeholder="e.g., FA23-BCS-A" autocomplete="off">
+                    <datalist id="batchList"></datalist>
                     <button class="btn" onclick="loadBaseBatch()">Load</button>
                 </div>
             </div>
@@ -403,7 +405,23 @@
             document.getElementById('searchResults').innerHTML = '';
             document.getElementById('courseSearch').value = '';
         }
+        // --- BATCH AUTOCOMPLETE PRE-FETCH ---
+        async function loadBatchOptions() {
+            // Fetch all section names once on page load
+            const { data, error } = await supabase
+                .from('sections')
+                .select('name')
+                .order('name');
+            
+            if (!error && data) {
+                const dataList = document.getElementById('batchList');
+                // Inject them as native browser options
+                dataList.innerHTML = data.map(sec => `<option value="${sec.name}">`).join('');
+            }
+        }
 
+        // Initialize everything
+        loadBatchOptions();
         renderGrid();
     </script>
 </body>
